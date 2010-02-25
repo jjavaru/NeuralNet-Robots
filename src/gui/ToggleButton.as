@@ -17,17 +17,22 @@ package gui
 		/*  PRIVATE VARIABLES			                                                 PRIVATE VARIABLES  */
 		/*-------------------------------------------------------------------------------------------------*/
 		private var _toggled :Boolean = false 
+		protected static var OVERDOWN:Number = 4
 		
+		/*---------------------------------------------------------------------------------------------------*/
+		/*  CONSTRUCTOR					                                                 				    */
+		/*-------------------------------------------------------------------------------------------------*/
 		public function ToggleButton()
 		{
 			super();
 			this._states = 5
 		}
 		
-		public function changeToggle(on:Boolean) :void {
+		public function set toggle(on:Boolean) :void {
+			if(_disabled) return
 			var s:Boolean = _bm.smoothing;
 			if(testing) trace("Button::changeToggle() "+on );
-			_bm.bitmapData = _bmds[on ? 2 : 0];
+			_bm.bitmapData = _bmds[on ? DOWN : UP];
 			_toggled = on
 			_bm.smoothing = s;
 		}
@@ -44,38 +49,34 @@ package gui
 				initImagesAndListeners(arg);
 			}else
 			{
-				_bmds[4] = arg;
+				_bmds[OVERDOWN] = arg;
 			}
 			center();
-		}	
+		}
+		
+		/**
+	 	*	The <code>BitmapData</code> object to represent the button in the "mouse-over and selected" state. 
+	 	*/
+		public function get overDown() : BitmapData 
+		{ 
+			return _bmds[OVERDOWN]; 
+		}
 		
 		/**
 		*	Returns a clone of the given Button instance.
 		*	
 		*	@return ToggleButton instance.
 		*/
-		public override function clone() :Button
+		public override function clone(_x:int = 0, _y:int = 0, _text:String="") :Button
 		{
-			var newb:ToggleButton = new ToggleButton();
-				newb.guide = guide == null ? null : guide.clone();
-				newb.up = up == null ? null : up.clone();
-				newb.over = over == null ? null : over.clone();
-				newb.down = down == null ? null : down.clone();
-				newb.disabled = (disabled == null) ? null : disabled.clone()
-				newb.overDown = overDown == null ? null : overDown.clone();
-				newb.upFunction = upFunction;
-				newb.overFunction = overFunction;
-				newb.downFunction = downFunction;
-				newb.outFunction = outFunction;
-				newb.textFormat = _textLabel.defaultTextFormat
-				return newb;
+			var newb:ToggleButton = makeClone(new ToggleButton(),_x,_y,_text) as ToggleButton
+			newb.overDown = overDown == null ? null : overDown.clone();
+			newb.radioSet = radioSet
+			return newb
 		}
-		/**
-		 *	The <code>BitmapData</code> object to represent the button in the over position.
-		 */
-		public function get overDown() : BitmapData 
-		{ 
-			return _bmds[4]; 
+		
+		public function cloneToggle(_x:int = 0, _y:int = 0, _text:String="") :ToggleButton {
+			return clone(_x,_y,_text) as ToggleButton
 		}
 		
 		/*---------------------------------------------------------------------------------------------------*/
@@ -87,25 +88,44 @@ package gui
 		} 
 		
 		protected override function nextOverBitmap() :BitmapData {
-			return _bmds[_toggled ? 4 : 1];
+			if(testing) trace("nextOverBitmap: ",_toggled ? 4: 1)
+			return _bmds[_toggled ? OVERDOWN : OVER];
 		}
 		
 		protected override function nextDownBitmap() :BitmapData {
 			//radio button style
 			if(radioSet.length > 0){
 				for each(var tb:ToggleButton in radioSet){
-					tb.changeToggle(false)
+					tb.toggle = false
 				}
 				this._toggled = true
 			//check box style
 			} else { 
 				_toggled = !_toggled
 			}
-			return _bmds[_toggled ? 4 : 1];
+			return _bmds[_toggled ? OVERDOWN : OVER];
 		}
 		
 		protected override function nextOutBitmap() :BitmapData {
-			return _bmds[_toggled ? 2 : 0];
+			return _bmds[_toggled ? DOWN : UP];
+		}
+		
+		protected override function mouseDownHandler(event:MouseEvent) : void 
+		{
+			if(_disabled) return
+			var s:Boolean = _bm.smoothing;
+			if(testing) trace("Button::mouseDownHandler() " );
+			stage.addEventListener("mouseUp", mouseUpHandler, false, 0, true);
+			_bm.bitmapData = nextDownBitmap()
+			_bm.smoothing = s;
+			_prs = true;
+			_dwnBf = false;
+			center();
+			if(_toggled){
+				if(downFunction != null) downFunction(event);
+			} else { 
+				if(upFunction != null) upFunction(event);		
+			}
 		}
 		
 	}

@@ -1,4 +1,4 @@
-package
+package Robots
 {
 	import flash.display.Graphics;
 	import flash.display.Sprite;
@@ -6,7 +6,7 @@ package
 	import flash.filters.BlurFilter;
 	import flash.filters.GlowFilter;
 	
-	public class Robot extends Sprite
+	public class BaseRobot extends Sprite
 	{
 		protected static var nextID:Number = 0
 		protected var board:RobotBoard
@@ -31,15 +31,7 @@ package
 		protected var redMC:Sprite = new Sprite()
 		protected var rangeMC:Sprite = new Sprite()
 		
-		//Neural Net related
-		protected var net:NeuralNet;
-		protected var TrainingInput:Array
-		protected var TrainingOutput:Array
-		protected var useBackprop:Boolean = false
-		public var cachedInput:Array = new Array()
-		protected var cachedOutput:Array;
-		
-		public function Robot(gen:Number,game:RobotBoard,xpos:Number,ypos:Number,mateNet:NeuralNet = null, range:Boolean = false, training :Boolean = false, scale :Number = 1.0, displayOnly :Boolean = false)
+		public function BaseRobot(gen:Number,game:RobotBoard,xpos:Number,ypos:Number, range:Boolean = false, scale :Number = 1.0)
 		{
 			id = nextID++
 			generation = gen
@@ -48,85 +40,18 @@ package
 			y = ypos
 			_x = x
 			_y = y
-			useBackprop = training
 			this._height *= scale
 			this._width *= scale
 			this._moveStep *= scale
-			//if(_moveStep > 4.7) _moveStep = 2.7
-			
-			if(mateNet == null && !displayOnly) {
-				if(this.board.poison){
-					if(this.board.hardWiredLights){
-						net = new NeuralNet(15,12,4)
-					} else {
-						net = new NeuralNet(15,12,6)
-					}
-				} else {
-					if(this.board.hardWiredLights){
-						net = new NeuralNet(13,8,4)
-					} else {
-						net = new NeuralNet(13,8,5)
-					}
-				}
-			} else {
-				net = mateNet
-			}
-
-			if(useBackprop && mateNet == null){
-				trainNeuralNet()
-			}
 			
 			drawRobot()
-			if(!displayOnly){
-				this.addEventListener(MouseEvent.CLICK,selected)
-				initialPosition()
-			}
 			greenOn = false
 			redOn = false
-		}
-		
-		protected function trainNeuralNet() :void {
-			TrainingInput =  [[-1,-1,-1,-1,-1,-1,-1,-1,1],
-							  [1,-1,-1,1,-1,-1,-1,-1,1],
-							  [-1,-1,-1,1,-1,-1,-1,-1,1],
-							  [-1,-1,-1,-1,1,-1,-1,-1,1],
-							  [-1,-1,-1,-1,-1,1,-1,-1,1],
-							  [-1,-1,-1,-1,-1,-1,1,1,1],
-							  [1,-1,-1,-1,-1,-1,-1,-1,1],
-							  [-1,1,-1,-1,-1,-1,-1,-1,1],
-							  [-1,-1,1,-1,-1,-1,-1,-1,1]]
-							 			
-			TrainingOutput = [[0,0,0,1,0],
-							  [1,0,0,0,0],
-							  [1,0,0,0,1],
-							  [0,1,0,0,1],
-							  [0,0,1,0,1],
-							  [0,0,0,1,0],
-							  [0,0,0,1,0],
-							  [0,1,0,0,0],
-							  [0,0,1,0,0]]
-							  
-			for(var i:Number = 0;i<100;i++){
-				var error:Number = 0
-				for(var j:Number = 0;j<TrainingInput.length;j++){
-					error += net.backProp(TrainingOutput[j],TrainingInput[j])
-				}
-				if(_debug) trace(i,error)
-			}
 		}
 		
 		public function destroy() :void {
 			this.visible = false
 			this.isDestroyed = true
-		}
-		
-		protected function selected(e :MouseEvent) :void {
-			//this.board.robotSelect(this)
-		}
-		
-		public function mate(ro:Robot, scale:Number = 1.0):Robot{
-			
-			return new Robot(this.board.round,board,100+Math.random()*500,100+Math.random()*300,net.mate(ro.net),false,false,scale)
 		}
 		
 		public function position(nx:Number,ny:Number,na:Number):void {
@@ -164,10 +89,6 @@ package
 			this.redMC.visible = b
 		}
 		
-		public function set debug(b:Boolean):void{
-			this.net.debug = b
-		}
-		
 		public function get angle():Number{
 			if(_debug) trace("angle",_angle,(this._angle % (2*Math.PI)))
 			return (this._angle % (2*Math.PI))
@@ -188,37 +109,7 @@ package
 	 	*	Handle input to this robot
 	 	*/
 		public function input(neighbors:Array):void{
-			var sw:int;
-			var decision:Array;
-			
-			neighbors.push(lmotor?1:-1)
-			neighbors.push(rmotor?1:-1)
-			neighbors.push(1)
-			var equal:Boolean = true
-			for(var i:Number = 0;i<neighbors.length-1;i++){
-				if(neighbors[i] != cachedInput[i]){
-					equal = false;
-					break;
-				}
-			}
-			
-			if(equal){
-				decision = cachedOutput;
-				sw = maxIndex(decision,0,4);
-				this.board.cached++;
-			} else {
-				cachedInput = neighbors
-				decision = net.decide(neighbors)
-				sw = maxIndex(decision,0,4)
-				cachedOutput = decision;
-				this.board.uncached++;
-			}
-			if(_debug) trace("decision",decision,sw,!!(sw&1),!!(sw&2))
-			move(!!(sw&1),!!(sw&2))
-			if(!board.hardWiredLights){
-				this.greenOn = (decision[4] > .5)
-				if(board.poison) this.redOn = (decision[5] > .5)
-			}
+			return
 		}
 		
 		/**

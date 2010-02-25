@@ -40,17 +40,16 @@ package
 			delta_hidden = new Array(hidden)
 			delta_output = new Array(outputs)
 			
-			if(blank) return
-				
+			if(!blank) initialize()
+		}
+		
+		protected function initialize() :void { 
+			
 			this.layer1 = new Array()
 			this.dLayer1 = new Array()
 			for(var i:Number = 0;i<inputs;i++){
-				var t:Array = new Array()
-				var d:Array = new Array()
-				for(var j:Number = 0;j<hidden;j++){
-					t.push(Math.random()-.5)
-					d.push(0.0)
-				}
+				var t:Array = new Array(hidden).map(random)
+				var d:Array = new Array(hidden).map(zero)
 				layer1.push(t)
 				dLayer1.push(d)
 			}
@@ -59,16 +58,19 @@ package
 				this.layer2 = new Array()
 				this.dLayer2 = new Array()
 				for(var i2:Number = 0;i2<hidden;i2++){
-					var t2:Array = new Array()
-					var d2:Array = new Array()
-					for(var j2:Number = 0;j2<outputs;j2++){
-						t2.push(Math.random()-.5)
-						d2.push(0.0)
-					}
+					var t2:Array = new Array(outputs).map(random)
+					var d2:Array = new Array(outputs).map(zero)
 					layer2.push(t2)
 					dLayer2.push(d2)
 				}
 			}
+		}
+		
+		protected function random(element:*, index:int, arr:Array):Number{
+			return Math.random()-.5
+		}
+		protected function zero(element:*, index:int, arr:Array):Number{
+			return 0.0
 		}
 		
 		public function mate(net:NeuralNet):NeuralNet{

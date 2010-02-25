@@ -36,8 +36,8 @@ package gui
 		/*-------------------------------------------------------------------------------------------------*/
 		protected var _bmds : Array = new Array();
 		protected var _bm:Bitmap = new Bitmap();
-		private var _dwnBf:Boolean = false;
-		private var _prs:Boolean = false;
+		protected var _dwnBf:Boolean = false;
+		protected var _prs:Boolean = false;
 		private var _center:String = "TL";
 		//*JMJ additions
 		private var _text:String = "";
@@ -45,6 +45,12 @@ package gui
 		protected var _textFormatSet:Boolean = false
 		protected var _disabled :Boolean = false
 		protected var _states :Number = 4
+		
+		protected static var UP:Number = 0
+		protected static var OVER:Number = 1
+		protected static var DOWN:Number = 2
+		protected static var OFF:Number = 3
+		
 		/*---------------------------------------------------------------------------------------------------*/
 		/*  PUBLIC VARIABLES			                                                  PUBLIC VARIABLES  */
 		/*-------------------------------------------------------------------------------------------------*/
@@ -144,7 +150,7 @@ package gui
 				initImagesAndListeners(arg);
 			}else
 			{
-				_bmds[0] = arg;
+				_bmds[UP] = arg;
 			}
 			center();
 		}
@@ -153,7 +159,7 @@ package gui
 	 	*/
 		public function get up() : BitmapData 
 		{ 
-			return _bmds[0]; 
+			return _bmds[UP]; 
 		}
 		/**
 	 	*	The <code>BitmapData</code> object to represent the button in the over position.
@@ -167,7 +173,7 @@ package gui
 				initImagesAndListeners(arg);
 			}else
 			{
-				_bmds[1] = arg;
+				_bmds[OVER] = arg;
 			}
 			center();
 		}	
@@ -176,7 +182,7 @@ package gui
 		 */
 		public function get over() : BitmapData 
 		{ 
-			return _bmds[1]; 
+			return _bmds[OVER]; 
 		}
 		/**
 	 	*	The <code>BitmapData</code> object to represent the button in the down position.
@@ -190,7 +196,7 @@ package gui
 				initImagesAndListeners(arg);
 			}else
 			{
-				_bmds[2] = arg;
+				_bmds[DOWN] = arg;
 			} 
 			center();
 		}
@@ -199,7 +205,7 @@ package gui
 	 	*/
 		public function get down() : BitmapData 
 		{ 
-			return _bmds[2]; 
+			return _bmds[DOWN]; 
 		}
 		/**
 	 	*	The <code>BitmapData</code> object to represent the button when disabled.
@@ -213,7 +219,7 @@ package gui
 				initImagesAndListeners(arg);
 			}else
 			{
-				_bmds[3] = arg;
+				_bmds[OFF] = arg;
 			} 
 			center();
 		}
@@ -222,7 +228,7 @@ package gui
 	 	*/
 		public function get disabled() : BitmapData 
 		{ 
-			return _bmds[3]; 
+			return _bmds[OFF]; 
 		}
 		
 		/**
@@ -242,7 +248,6 @@ package gui
 		*/
 		public override function set width(val:Number):void
 		{
-			var w:Number = width;
 			var scale:Number = val/width;
 			scaleX = scale;
 		}
@@ -263,9 +268,8 @@ package gui
 		*/
 		public override function set height(val:Number):void
 		{
-			var h:Number = height;
 			var scale:Number = val/height;
-			scaleY = height;
+			scaleY = scale;
 		}
 		/*---------------------------------------------------------------------------------------------------*/
 		/*  PUBLIC METHODS							                               	       	PUBLIC METHODS  */
@@ -289,22 +293,30 @@ package gui
 		*	
 		*	@return Button instance.
 		*/
-		public function clone():Button
+		public function clone(_x:int = 0, _y:int = 0, _text:String=""):Button
 		{
-			var newb:Button = new Button();
-				newb.guide = guide == null ? null : guide.clone();
-				newb.up = up == null ? null : up.clone();
-				newb.over = over == null ? null : over.clone();
-				newb.down = down == null ? null : down.clone();
-				newb.disabled = (disabled == null) ? null : disabled.clone()
-				//newb.overDown = overDown == null ? null : overDown.clone();
-				newb.upFunction = upFunction;
-				newb.overFunction = overFunction;
-				newb.downFunction = downFunction;
-				newb.outFunction = outFunction;
-				newb.textFormat = _textLabel.defaultTextFormat
-				return newb;
+			return makeClone(new Button,_x,_y,_text);
 		}
+		
+		protected function makeClone(newb:Button,_x:int = 0, _y:int = 0, _text:String="") :Button {
+			newb.guide = guide == null ? null : guide.clone();
+			newb.up = up == null ? null : up.clone();
+			newb.over = over == null ? null : over.clone();
+			newb.down = down == null ? null : down.clone();
+			newb.disabled = (disabled == null) ? null : disabled.clone()
+			newb.upFunction = upFunction;
+			newb.overFunction = overFunction;
+			newb.downFunction = downFunction;
+			newb.outFunction = outFunction;
+			newb.textFormat = _textLabel.defaultTextFormat
+			
+			newb.x=_x
+			newb.y=_y
+			newb.text = _text
+			
+			return newb
+		}
+		
 		/**
 	 	*	Inherits the skin [or bitmapdata and guide] as well as optionally the 
 	 	*	action functions of the <code>parent</code> Button. This is much like
@@ -332,10 +344,10 @@ package gui
 		public function set enabled(d :Boolean) :void {
 			this._disabled = !d
 			if(_disabled){
-				_bm.bitmapData = _bmds[3];
+				_bm.bitmapData = _bmds[OFF];
 				trace("disabling button")
 			} else {
-				_bm.bitmapData = _bmds[0]
+				_bm.bitmapData = _bmds[UP]
 			}
 		}
 		/*---------------------------------------------------------------------------------------------------*/
@@ -354,7 +366,7 @@ package gui
 			if(overFunction != null) overFunction(event);
 		}
 		
-		private function mouseDownHandler(event:MouseEvent) : void 
+		protected function mouseDownHandler(event:MouseEvent) : void 
 		{
 			if(_disabled) return
 			var s:Boolean = _bm.smoothing;
@@ -367,21 +379,20 @@ package gui
 			center();
 			if(downFunction != null) downFunction(event);
 		}
+		
 		protected function mouseUpHandler(event:MouseEvent) : void 
 		{
 			if(_disabled) return
 			var s:Boolean = _bm.smoothing;
 			if(testing) trace("Button::mouseUpHandler() " );
 			stage.removeEventListener("mouseUp", mouseUpHandler);
-			_bm.bitmapData = (event.target == this) ? _bmds[1] : _bmds[0];
+			_bm.bitmapData = (event.target == this) ? _bmds[OVER] : _bmds[UP];
 			_bm.smoothing = s;
 			_prs = false;
 			center();
 			if(upFunction != null) upFunction(event);
 		}
-		
-		
-		
+
 		private function mouseOutHandler(event:MouseEvent) : void 
 		{
 			if(!_disabled){
@@ -422,13 +433,13 @@ package gui
 		
 		//select new bitmap for 
 		protected function nextOutBitmap() :BitmapData {
-			return _bmds[0]
+			return _bmds[UP]
 		}
 		protected function nextOverBitmap() :BitmapData {
-			return _bmds[1]
+			return _bmds[OVER]
 		}
 		protected function nextDownBitmap() :BitmapData {
-			return _bmds[2]
+			return _bmds[DOWN]
 		}
 	}
 	

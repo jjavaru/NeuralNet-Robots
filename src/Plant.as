@@ -8,6 +8,9 @@ package
 		protected var mod:Number;
 		public var poison:Boolean;
 		
+		/*---------------------------------------------------------------------------------------------------*/
+		/*  CONSTRUCTOR							                                         	   CONSTRUCTOR  */
+		/*-------------------------------------------------------------------------------------------------*/
 		public function Plant(poisonPlant:Boolean = false)
 		{
 			this.poison = poisonPlant
@@ -19,6 +22,12 @@ package
 			reset(poison)
 		}
 		
+		/*---------------------------------------------------------------------------------------------------*/
+		/*  PUBLIC FUNCTIONS							                               	  PUBLIC FUNCTIONS  */
+		/*-------------------------------------------------------------------------------------------------*/
+		/**
+	 	*	Set the location of the plant
+	 	*/
 		public function reset(poison:Boolean):void{
 			if(poison){
 				this.x = 250 + Math.random()*200
