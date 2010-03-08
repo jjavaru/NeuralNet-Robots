@@ -22,9 +22,8 @@
 <sourceAttachmentPath/>
 </compiler>
 <applications>
-<application path="Robot.as"/>
-<application path="NeuralNet.as"/>
 <application path="RobotBoard.as"/>
+<application path="Robot.as"/>
 </applications>
 <modules/>
 <buildCSSFiles/>

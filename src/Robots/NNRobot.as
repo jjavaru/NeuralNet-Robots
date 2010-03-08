@@ -1,5 +1,7 @@
 package Robots
 {
+	import Decision_Systems.NeuralNet;
+	
 	import flash.events.MouseEvent;
 	
 	public class NNRobot extends BaseRobot
